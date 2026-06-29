@@ -1,15 +1,222 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import Icon from '@/components/ui/icon';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+
+type Tab = 'active' | 'done' | 'templates' | 'stats';
+
+const NAV: { id: Tab; label: string; icon: string }[] = [
+  { id: 'active', label: 'Активные', icon: 'ClipboardList' },
+  { id: 'done', label: 'Завершённые', icon: 'CheckCheck' },
+  { id: 'templates', label: 'Шаблоны', icon: 'LayoutTemplate' },
+  { id: 'stats', label: 'Статистика', icon: 'BarChart3' },
+];
+
+const activeChecks = [
+  { id: 1, zone: 'Кухня', title: 'Утренний осмотр кухни', done: 8, total: 12, by: 'А. Соколов', time: 'сегодня, 09:14', issues: 1 },
+  { id: 2, zone: 'Зал', title: 'Подготовка зала к открытию', done: 5, total: 9, by: 'М. Левина', time: 'сегодня, 09:40', issues: 0 },
+  { id: 3, zone: 'Склад', title: 'Контроль сроков годности', done: 2, total: 7, by: 'Д. Орлов', time: 'сегодня, 10:05', issues: 2 },
+];
+
+const doneChecks = [
+  { id: 4, zone: 'Бар', title: 'Закрытие бара', score: 100, by: 'И. Чен', time: 'вчера, 23:50' },
+  { id: 5, zone: 'Кухня', title: 'Санитарный контроль', score: 92, by: 'А. Соколов', time: 'вчера, 18:20' },
+  { id: 6, zone: 'Зал', title: 'Вечерний осмотр', score: 78, by: 'М. Левина', time: 'вчера, 22:10' },
+];
+
+const templates = [
+  { id: 1, zone: 'Кухня', title: 'Открытие кухни', items: 12, icon: 'CookingPot', color: '16 45% 48%' },
+  { id: 2, zone: 'Зал', title: 'Подготовка зала', items: 9, icon: 'Armchair', color: '200 40% 45%' },
+  { id: 3, zone: 'Бар', title: 'Контроль бара', items: 11, icon: 'Wine', color: '280 30% 50%' },
+  { id: 4, zone: 'Склад', title: 'Приёмка и сроки', items: 7, icon: 'Package', color: '40 50% 45%' },
+  { id: 5, zone: 'Санузел', title: 'Чистота санузлов', items: 6, icon: 'Sparkles', color: '170 40% 42%' },
+  { id: 6, zone: 'Персонал', title: 'Внешний вид сотрудников', items: 8, icon: 'Users', color: '24 50% 50%' },
+];
+
+const stats = [
+  { label: 'Проверок за месяц', value: '148', sub: '+12% к прошлому', icon: 'TrendingUp' },
+  { label: 'Средний балл', value: '91%', sub: 'по всем зонам', icon: 'Gauge' },
+  { label: 'Открытых нарушений', value: '7', sub: '3 критичных', icon: 'TriangleAlert' },
+  { label: 'Фото-фиксаций', value: '34', sub: 'за неделю', icon: 'Camera' },
+];
+
+const zoneScores = [
+  { zone: 'Кухня', score: 94 },
+  { zone: 'Зал', score: 88 },
+  { zone: 'Бар', score: 96 },
+  { zone: 'Склад', score: 79 },
+  { zone: 'Санузел', score: 91 },
+];
 
 const Index = () => {
+  const [tab, setTab] = useState<Tab>('active');
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 color-black text-black">Добро пожаловать!</h1>
-        <p className="text-xl text-gray-600">тут будет отображаться ваш проект</p>
-      </div>
-      <span className="absolute bottom-8 left-1/2 -translate-x-1/2 inline-block bg-[#FF6637] text-white text-sm px-4 py-2 rounded-full whitespace-nowrap">
-        Подождите 5 минут, Юра создает первую версию проекта с нуля
-      </span>
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Header */}
+      <header className="border-b border-border/60 sticky top-0 z-20 bg-background/80 backdrop-blur-xl">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground">
+              <Icon name="UtensilsCrossed" size={18} />
+            </div>
+            <div className="leading-tight">
+              <p className="font-semibold text-sm tracking-tight">Контроль качества</p>
+              <p className="text-[11px] text-muted-foreground">Ресторан «Поехали»</p>
+            </div>
+          </div>
+          <Button className="rounded-full gap-2 h-10 px-5 shadow-sm">
+            <Icon name="Plus" size={16} />
+            Новая проверка
+          </Button>
+        </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+        {/* Hero */}
+        <div className="mb-10 animate-fade-in">
+          <p className="text-primary text-sm font-medium mb-2">Сегодня · 29 июня</p>
+          <h1 className="font-display text-5xl sm:text-6xl font-medium tracking-tight leading-[1.05]">
+            Чистота и порядок —<br />под контролем.
+          </h1>
+          <p className="text-muted-foreground mt-4 max-w-md">
+            Проводите проверки по зонам, фиксируйте нарушения фотографиями и следите за качеством в реальном времени.
+          </p>
+        </div>
+
+        {/* Tabs */}
+        <nav className="flex gap-1.5 p-1.5 bg-secondary/60 rounded-2xl w-fit mb-8 overflow-x-auto">
+          {NAV.map((n) => (
+            <button
+              key={n.id}
+              onClick={() => setTab(n.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                tab === n.id
+                  ? 'bg-card shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Icon name={n.icon} size={16} />
+              {n.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Active */}
+        {tab === 'active' && (
+          <div className="grid gap-4 animate-scale-in">
+            {activeChecks.map((c) => (
+              <div key={c.id} className="group bg-card border border-border/70 rounded-3xl p-6 hover:shadow-lg hover:shadow-primary/5 transition-all">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Badge variant="secondary" className="rounded-full font-normal">{c.zone}</Badge>
+                      {c.issues > 0 && (
+                        <span className="inline-flex items-center gap-1 text-xs text-destructive font-medium">
+                          <Icon name="Camera" size={13} />
+                          {c.issues} нарушени{c.issues === 1 ? 'е' : 'я'}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-semibold text-lg tracking-tight">{c.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">{c.by} · {c.time}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Icon name="ArrowRight" size={18} />
+                  </Button>
+                </div>
+                <div className="mt-5 flex items-center gap-4">
+                  <Progress value={(c.done / c.total) * 100} className="h-2" />
+                  <span className="text-sm font-medium tabular-nums text-muted-foreground whitespace-nowrap">
+                    {c.done}/{c.total}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Done */}
+        {tab === 'done' && (
+          <div className="grid gap-4 animate-scale-in">
+            {doneChecks.map((c) => (
+              <div key={c.id} className="bg-card border border-border/70 rounded-3xl p-6 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold tabular-nums ${
+                    c.score >= 90 ? 'bg-accent text-accent-foreground' : c.score >= 80 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
+                  }`}>
+                    {c.score}
+                  </div>
+                  <div>
+                    <Badge variant="secondary" className="rounded-full font-normal mb-1">{c.zone}</Badge>
+                    <h3 className="font-semibold tracking-tight">{c.title}</h3>
+                    <p className="text-sm text-muted-foreground">{c.by} · {c.time}</p>
+                  </div>
+                </div>
+                <Icon name="CircleCheck" size={22} className="text-primary shrink-0" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Templates */}
+        {tab === 'templates' && (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-scale-in">
+            {templates.map((t) => (
+              <div key={t.id} className="group bg-card border border-border/70 rounded-3xl p-6 hover:shadow-lg hover:shadow-primary/5 transition-all cursor-pointer">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-white"
+                  style={{ backgroundColor: `hsl(${t.color})` }}
+                >
+                  <Icon name={t.icon} size={22} />
+                </div>
+                <h3 className="font-semibold tracking-tight">{t.title}</h3>
+                <p className="text-sm text-muted-foreground">{t.zone} · {t.items} пунктов</p>
+                <div className="mt-4 flex items-center gap-1 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  Запустить <Icon name="ArrowRight" size={15} />
+                </div>
+              </div>
+            ))}
+            <button className="border-2 border-dashed border-border rounded-3xl p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors min-h-[150px]">
+              <Icon name="Plus" size={24} />
+              <span className="text-sm font-medium">Создать шаблон</span>
+            </button>
+          </div>
+        )}
+
+        {/* Stats */}
+        {tab === 'stats' && (
+          <div className="animate-scale-in space-y-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {stats.map((s) => (
+                <div key={s.label} className="bg-card border border-border/70 rounded-3xl p-5">
+                  <Icon name={s.icon} size={20} className="text-primary mb-3" />
+                  <p className="text-3xl font-semibold tracking-tight tabular-nums">{s.value}</p>
+                  <p className="text-sm font-medium mt-1">{s.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{s.sub}</p>
+                </div>
+              ))}
+            </div>
+            <div className="bg-card border border-border/70 rounded-3xl p-6">
+              <h3 className="font-semibold tracking-tight mb-5">Качество по зонам</h3>
+              <div className="space-y-4">
+                {zoneScores.map((z) => (
+                  <div key={z.zone} className="flex items-center gap-4">
+                    <span className="text-sm w-20 shrink-0">{z.zone}</span>
+                    <Progress value={z.score} className="h-2.5" />
+                    <span className="text-sm font-medium tabular-nums w-10 text-right">{z.score}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      <footer className="max-w-5xl mx-auto px-5 sm:px-8 py-8 text-center text-xs text-muted-foreground">
+        Контроль качества ресторана · первая версия
+      </footer>
     </div>
   );
 };
