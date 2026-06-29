@@ -25,10 +25,19 @@ interface ItemState {
 }
 
 const RESTAURANTS = [
-  'Ресторан «Поехали» — Центр',
-  'Ресторан «Поехали» — Север',
-  'Ресторан «Поехали» — Юг',
-  'Кофейня «Орбита»',
+  'UDC Химки',
+  'UDC Авиапарк',
+  'UDC Кунцево Плаза',
+  'UDC Проспект Мира',
+  'UDC Павелецкая',
+  'UDC Каширская Плаза',
+  'UDC Саларис',
+  'UDC Океания',
+  'UDC Мега ТС',
+  'UDC Метрополис',
+  'UDC Капитолий',
+  'UDC Афимолл',
+  'Black Market',
 ];
 
 const MONTHS = [
@@ -232,7 +241,7 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
           </Button>
           <div className="flex-1 text-center min-w-0">
             <p className="font-semibold text-sm tracking-tight truncate">{data.title}</p>
-            <p className="text-[11px] text-muted-foreground truncate">{finalAssignee} · {month} · {restaurant.split('—')[1]?.trim() ?? restaurant}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{finalAssignee} · {month} · {restaurant}</p>
           </div>
           <span className="text-sm font-medium tabular-nums text-muted-foreground w-12 text-right">
             {checked}/{data.items.length}
