@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 export interface ChecklistItem {
   id: number;
   text: string;
+  section?: string;
 }
 
 export interface RunnerData {
@@ -276,9 +277,16 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
               <div className="border border-border/70 rounded-2xl overflow-hidden">
                 {data.items.map((item, idx) => {
                   const st = states[item.id];
+                  const prevSec = idx > 0 ? data.items[idx - 1].section : null;
+                  const showSec = item.section && item.section !== prevSec;
                   return (
+                    <div key={item.id}>
+                      {showSec && (
+                        <div className="px-4 py-2 bg-secondary/40 border-b border-border/50">
+                          <span className="text-xs font-semibold uppercase tracking-widest text-primary">{item.section}</span>
+                        </div>
+                      )}
                     <div
-                      key={item.id}
                       className={`flex items-start gap-3 px-4 py-3 text-sm ${idx !== data.items.length - 1 ? 'border-b border-border/50' : ''} ${
                         st.status === 'issue' ? 'bg-destructive/5' : ''
                       }`}
@@ -294,6 +302,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                       }`}>
                         {st.status === 'ok' ? 'Зачёт' : st.status === 'issue' ? 'Незачёт' : '—'}
                       </span>
+                    </div>
                     </div>
                   );
                 })}
@@ -380,9 +389,17 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
         <div className="max-w-2xl mx-auto px-5 sm:px-8 py-6 space-y-3">
           {data.items.map((item, idx) => {
             const st = states[item.id];
+            const prevSection = idx > 0 ? data.items[idx - 1].section : null;
+            const showSection = item.section && item.section !== prevSection;
             return (
+              <div key={item.id}>
+                {showSection && (
+                  <div className="flex items-center gap-3 pt-2 pb-1">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-primary">{item.section}</span>
+                    <div className="flex-1 h-px bg-primary/20" />
+                  </div>
+                )}
               <div
-                key={item.id}
                 className={`bg-card border rounded-3xl p-5 transition-all ${
                   st.status === 'ok' ? 'border-primary/30' : st.status === 'issue' ? 'border-destructive/40' : 'border-border/70'
                 }`}
@@ -448,6 +465,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                     )}
                   </div>
                 )}
+              </div>
               </div>
             );
           })}
