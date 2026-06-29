@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 
@@ -25,24 +24,34 @@ interface ItemState {
   photo?: string;
 }
 
-const STAFF = [
-  { name: 'А. Соколов', role: 'Шеф-повар' },
-  { name: 'И. Чен', role: 'Бармен' },
-  { name: 'О. Смирнова', role: 'Кондитер' },
-  { name: 'М. Левина', role: 'Официант' },
-  { name: 'Д. Орлов', role: 'Администратор' },
+const RESTAURANTS = [
+  'Ресторан «Поехали» — Центр',
+  'Ресторан «Поехали» — Север',
+  'Ресторан «Поехали» — Юг',
+  'Кофейня «Орбита»',
 ];
 
+const MONTHS = [
+  'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+  'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
+];
+
+const currentMonth = MONTHS[new Date().getMonth()];
+
 const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => void }) => {
-  const [assignee, setAssignee] = useState<string | null>(null);
-  const [customName, setCustomName] = useState('');
-  const [showCustom, setShowCustom] = useState(false);
+  const [lastName, setLastName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [month, setMonth] = useState(currentMonth);
+  const [restaurant, setRestaurant] = useState('');
+  const [started, setStarted] = useState(false);
   const [states, setStates] = useState<Record<number, ItemState>>(
     Object.fromEntries(data.items.map((i) => [i.id, { status: 'pending', comment: '' }]))
   );
-  const finalAssignee = assignee ?? customName;
+  const finalAssignee = `${lastName} ${firstName}`.trim();
+  const canStart = lastName.trim() && firstName.trim() && restaurant;
   const [finished, setFinished] = useState(false);
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
 
   const set = (id: number, patch: Partial<ItemState>) =>
     setStates((s) => ({ ...s, [id]: { ...s[id], ...patch } }));
@@ -60,8 +69,8 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
     reader.readAsDataURL(file);
   };
 
-  // Экран выбора сотрудника
-  if (!finalAssignee) {
+  // Экран заполнения данных перед проверкой
+  if (!started) {
     return (
       <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
         <header className="border-b border-border/60 shrink-0">
@@ -71,65 +80,103 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
             </Button>
             <div>
               <p className="font-semibold text-sm tracking-tight">{data.title}</p>
-              <p className="text-[11px] text-muted-foreground">Выбор ответственного</p>
+              <p className="text-[11px] text-muted-foreground">Данные проверки</p>
             </div>
           </div>
         </header>
+
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-5 sm:px-8 py-8">
-            <h2 className="font-display text-4xl font-medium tracking-tight mb-2">Кто проводит<br/>проверку?</h2>
-            <p className="text-muted-foreground text-sm mb-8">Выберите сотрудника из списка или введите имя вручную</p>
-            <div className="space-y-2">
-              {STAFF.map((s) => (
-                <button
-                  key={s.name}
-                  onClick={() => { setAssignee(s.name); setShowCustom(false); }}
-                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${
-                    assignee === s.name
-                      ? 'border-primary bg-accent'
-                      : 'border-border/70 bg-card hover:border-primary/40'
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center font-semibold text-sm shrink-0">
-                    {s.name.split(' ')[0][0]}{s.name.split(' ')[1]?.[0]}
+            <h2 className="font-display text-4xl font-medium tracking-tight mb-2">Перед началом<br/>проверки</h2>
+            <p className="text-muted-foreground text-sm mb-8">Заполните данные — они войдут в итоговый отчёт</p>
+
+            <div className="space-y-5">
+              {/* Проверяющий */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Проверяющий</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Фамилия</label>
+                    <Input
+                      placeholder="Соколов"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="rounded-2xl h-12"
+                    />
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{s.name}</p>
-                    <p className="text-sm text-muted-foreground">{s.role}</p>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Имя</label>
+                    <Input
+                      placeholder="Алексей"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="rounded-2xl h-12"
+                    />
                   </div>
-                  {assignee === s.name && <Icon name="Check" size={18} className="text-primary shrink-0" />}
-                </button>
-              ))}
-              <button
-                onClick={() => { setAssignee(null); setShowCustom(true); }}
-                className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${
-                  showCustom ? 'border-primary bg-accent' : 'border-border/70 border-dashed bg-card hover:border-primary/40'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                  <Icon name="UserPlus" size={18} className="text-muted-foreground" />
                 </div>
-                <span className="font-medium text-muted-foreground">Другой сотрудник</span>
-              </button>
-              {showCustom && (
-                <div className="animate-fade-in px-1">
-                  <Input
-                    autoFocus
-                    placeholder="Имя и фамилия"
-                    value={customName}
-                    onChange={(e) => setCustomName(e.target.value)}
-                    className="rounded-2xl h-12"
-                  />
+              </div>
+
+              {/* Месяц */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Период</p>
+                <label className="text-sm font-medium">Месяц проверки</label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {MONTHS.map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setMonth(m)}
+                      className={`h-10 rounded-xl text-sm font-medium transition-all ${
+                        month === m
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              {/* Ресторан */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Место проведения</p>
+                <label className="text-sm font-medium">Ресторан</label>
+                <div className="space-y-2 mt-2">
+                  {RESTAURANTS.map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setRestaurant(r)}
+                      className={`w-full flex items-center justify-between gap-3 px-4 h-12 rounded-2xl border text-sm font-medium transition-all text-left ${
+                        restaurant === r
+                          ? 'border-primary bg-accent text-accent-foreground'
+                          : 'border-border/70 bg-card hover:border-primary/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon name="MapPin" size={16} className="text-muted-foreground shrink-0" />
+                        {r}
+                      </div>
+                      {restaurant === r && <Icon name="Check" size={16} className="text-primary shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
         <footer className="border-t border-border/60 shrink-0">
-          <div className="max-w-lg mx-auto px-5 sm:px-8 py-4">
+          <div className="max-w-lg mx-auto px-5 sm:px-8 py-4 space-y-2">
+            {canStart && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground px-1 animate-fade-in">
+                <span className="flex items-center gap-1.5"><Icon name="User" size={13} />{finalAssignee}</span>
+                <span className="flex items-center gap-1.5"><Icon name="CalendarDays" size={13} />{month}</span>
+                <span className="flex items-center gap-1.5"><Icon name="MapPin" size={13} />{restaurant}</span>
+              </div>
+            )}
             <Button
-              disabled={!assignee && !customName.trim()}
-              onClick={() => { if (!assignee) setAssignee(customName.trim()); }}
+              disabled={!canStart}
+              onClick={() => setStarted(true)}
               className="w-full rounded-full h-12 gap-2 text-base"
             >
               Начать проверку
@@ -151,11 +198,24 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
             <Icon name="CircleCheck" size={36} />
           </div>
           <h2 className="font-display text-5xl font-medium tracking-tight">{score}%</h2>
-          <p className="text-muted-foreground mt-2 mb-1">Проверка «{data.title}» завершена</p>
-          <p className="text-sm text-muted-foreground mb-2">
+          <p className="text-muted-foreground mt-2 mb-1">«{data.title}» завершена</p>
+          <p className="text-sm text-muted-foreground mb-4">
             {okCount} в норме · {issues} нарушени{issues === 1 ? 'е' : 'й'}
           </p>
-          <p className="text-sm font-medium mb-8">Ответственный: {finalAssignee}</p>
+          <div className="bg-secondary/60 rounded-2xl px-5 py-4 text-sm text-left space-y-2 mb-8">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Icon name="User" size={14} className="shrink-0" />
+              <span>{finalAssignee}</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Icon name="CalendarDays" size={14} className="shrink-0" />
+              <span>{month}</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Icon name="MapPin" size={14} className="shrink-0" />
+              <span>{restaurant}</span>
+            </div>
+          </div>
           <Button onClick={onClose} className="rounded-full px-8 h-11">Готово</Button>
         </div>
       </div>
@@ -172,7 +232,7 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
           </Button>
           <div className="flex-1 text-center min-w-0">
             <p className="font-semibold text-sm tracking-tight truncate">{data.title}</p>
-            <p className="text-[11px] text-muted-foreground">{finalAssignee} · {data.zone}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{finalAssignee} · {month} · {restaurant.split('—')[1]?.trim() ?? restaurant}</p>
           </div>
           <span className="text-sm font-medium tabular-nums text-muted-foreground w-12 text-right">
             {checked}/{data.items.length}
