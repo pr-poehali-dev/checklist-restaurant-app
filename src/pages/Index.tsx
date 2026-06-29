@@ -273,10 +273,10 @@ const Index = () => {
               <div key={c.id} className="bg-card border border-border/70 rounded-3xl p-6 flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4">
                   <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-semibold tabular-nums shrink-0 ${
-                    c.score >= 90 ? 'bg-accent text-accent-foreground' : c.score >= 80 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
+                    c.score >= 4 ? 'bg-accent text-accent-foreground' : c.score >= 3 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
                   }`}>
                     <span className="text-lg leading-none">{c.score}</span>
-                    <span className="text-[10px] font-normal opacity-60">%</span>
+                    <span className="text-[10px] font-normal opacity-60">из 5</span>
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">

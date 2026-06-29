@@ -80,7 +80,9 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const checked = data.items.filter((i) => states[i.id].status !== 'pending').length;
   const okCount = data.items.filter((i) => states[i.id].status === 'ok').length;
   const issues = data.items.filter((i) => states[i.id].status === 'issue').length;
-  const score = data.items.length ? Math.round((okCount / data.items.length) * 100) : 0;
+  const score = data.items.length
+    ? Math.max(1, parseFloat((5 - (issues / data.items.length) * 4).toFixed(1)))
+    : 5;
 
   const onFile = (id: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -246,10 +248,10 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 <p className="text-muted-foreground text-sm mt-1">{restaurant} · {month} · {dateStr}</p>
               </div>
               <div className={`w-20 h-20 rounded-2xl shrink-0 flex flex-col items-center justify-center font-semibold tabular-nums ${
-                score >= 90 ? 'bg-accent text-accent-foreground' : score >= 70 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
+                score >= 4 ? 'bg-accent text-accent-foreground' : score >= 3 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
               }`}>
-                <span className="text-2xl leading-none">{score}%</span>
-                <span className="text-[11px] font-normal mt-0.5 opacity-70">итог</span>
+                <span className="text-2xl leading-none">{score}</span>
+                <span className="text-[11px] font-normal mt-0.5 opacity-70">из 5</span>
               </div>
             </div>
 
@@ -458,6 +460,11 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
           <div className="flex items-center gap-3 text-sm">
             <span className="flex items-center gap-1.5 text-primary font-medium"><Icon name="Check" size={15} />{okCount} зачёт</span>
             <span className="flex items-center gap-1.5 text-destructive font-medium"><Icon name="X" size={15} />{issues} незачёт</span>
+            {checked > 0 && (
+              <span className="flex items-center gap-1 font-semibold tabular-nums text-foreground border border-border/70 rounded-full px-2.5 py-0.5">
+                {score} <span className="text-muted-foreground font-normal text-xs">/ 5</span>
+              </span>
+            )}
           </div>
           <Button
             disabled={checked < data.items.length}
