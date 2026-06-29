@@ -209,7 +209,7 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
           <h2 className="font-display text-5xl font-medium tracking-tight">{score}%</h2>
           <p className="text-muted-foreground mt-2 mb-1">«{data.title}» завершена</p>
           <p className="text-sm text-muted-foreground mb-4">
-            {okCount} в норме · {issues} нарушени{issues === 1 ? 'е' : 'й'}
+            {okCount} зачёт · {issues} незачёт
           </p>
           <div className="bg-secondary/60 rounded-2xl px-5 py-4 text-sm text-left space-y-2 mb-8">
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -276,7 +276,7 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
                       st.status === 'ok' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
                     }`}
                   >
-                    <Icon name="Check" size={16} /> В норме
+                    <Icon name="Check" size={16} /> Зачёт
                   </button>
                   <button
                     onClick={() => set(item.id, { status: st.status === 'issue' ? 'pending' : 'issue' })}
@@ -284,14 +284,14 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
                       st.status === 'issue' ? 'bg-destructive text-destructive-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
                     }`}
                   >
-                    <Icon name="TriangleAlert" size={16} /> Нарушение
+                    <Icon name="X" size={16} /> Незачёт
                   </button>
                 </div>
 
                 {st.status === 'issue' && (
                   <div className="mt-3 pl-8 space-y-3 animate-fade-in">
                     <Textarea
-                      placeholder="Опишите нарушение…"
+                      placeholder="Комментарий к незачёту…"
                       value={st.comment}
                       onChange={(e) => set(item.id, { comment: e.target.value })}
                       className="rounded-2xl resize-none bg-background border-border/70"
@@ -335,8 +335,8 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
       <footer className="border-t border-border/60 bg-background/80 backdrop-blur-xl shrink-0">
         <div className="max-w-2xl mx-auto px-5 sm:px-8 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-sm">
-            <span className="flex items-center gap-1.5 text-primary font-medium"><Icon name="Check" size={15} />{okCount}</span>
-            <span className="flex items-center gap-1.5 text-destructive font-medium"><Icon name="TriangleAlert" size={15} />{issues}</span>
+            <span className="flex items-center gap-1.5 text-primary font-medium"><Icon name="Check" size={15} />{okCount} зачёт</span>
+            <span className="flex items-center gap-1.5 text-destructive font-medium"><Icon name="X" size={15} />{issues} незачёт</span>
           </div>
           <Button
             disabled={checked < data.items.length}
