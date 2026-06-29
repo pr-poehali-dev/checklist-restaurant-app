@@ -3,8 +3,56 @@ import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import ChecklistRunner, { RunnerData } from '@/components/ChecklistRunner';
 
 type Tab = 'active' | 'done' | 'templates' | 'stats';
+
+const ITEMS_BY_ZONE: Record<string, string[]> = {
+  'Кухня': [
+    'Рабочие поверхности продезинфицированы',
+    'Холодильники держат температуру ≤ +4°C',
+    'Все продукты промаркированы датой',
+    'Полы вымыты, нет следов жира',
+    'Вытяжка очищена от налёта',
+    'Ножи и доски разделены по цветам',
+  ],
+  'Зал': [
+    'Столы расставлены по схеме',
+    'Скатерти и салфетки чистые',
+    'Освещение исправно работает',
+    'Меню без повреждений и пятен',
+    'Пол и зона входа чистые',
+  ],
+  'Бар': [
+    'Барная стойка вымыта',
+    'Бокалы без следов и сколов',
+    'Запасы напитков пополнены',
+    'Кофемашина очищена',
+  ],
+  'Склад': [
+    'Проверены сроки годности продуктов',
+    'Соблюдается товарное соседство',
+    'Нет признаков вредителей',
+    'Температура склада в норме',
+  ],
+  'Санузел': [
+    'Раковины и зеркала чистые',
+    'Есть мыло и бумажные полотенца',
+    'Унитазы продезинфицированы',
+    'Нет посторонних запахов',
+  ],
+  'Персонал': [
+    'Форма чистая и опрятная',
+    'Волосы убраны, головной убор надет',
+    'Бейджи на месте',
+    'Соблюдается гигиена рук',
+  ],
+};
+
+const buildRunner = (zone: string, title: string): RunnerData => {
+  const texts = ITEMS_BY_ZONE[zone] || ITEMS_BY_ZONE['Кухня'];
+  return { title, zone, items: texts.map((text, i) => ({ id: i + 1, text })) };
+};
 
 const NAV: { id: Tab; label: string; icon: string }[] = [
   { id: 'active', label: 'Активные', icon: 'ClipboardList' },
@@ -51,9 +99,11 @@ const zoneScores = [
 
 const Index = () => {
   const [tab, setTab] = useState<Tab>('active');
+  const [runner, setRunner] = useState<RunnerData | null>(null);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {runner && <ChecklistRunner data={runner} onClose={() => setRunner(null)} />}
       {/* Header */}
       <header className="border-b border-border/60 sticky top-0 z-20 bg-background/80 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
@@ -66,7 +116,10 @@ const Index = () => {
               <p className="text-[11px] text-muted-foreground">Ресторан «Поехали»</p>
             </div>
           </div>
-          <Button className="rounded-full gap-2 h-10 px-5 shadow-sm">
+          <Button
+            className="rounded-full gap-2 h-10 px-5 shadow-sm"
+            onClick={() => setRunner(buildRunner('Кухня', 'Новая проверка кухни'))}
+          >
             <Icon name="Plus" size={16} />
             Новая проверка
           </Button>
@@ -107,7 +160,11 @@ const Index = () => {
         {tab === 'active' && (
           <div className="grid gap-4 animate-scale-in">
             {activeChecks.map((c) => (
-              <div key={c.id} className="group bg-card border border-border/70 rounded-3xl p-6 hover:shadow-lg hover:shadow-primary/5 transition-all">
+              <div
+                key={c.id}
+                onClick={() => setRunner(buildRunner(c.zone, c.title))}
+                className="group bg-card border border-border/70 rounded-3xl p-6 hover:shadow-lg hover:shadow-primary/5 transition-all cursor-pointer"
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1.5">
@@ -164,7 +221,11 @@ const Index = () => {
         {tab === 'templates' && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-scale-in">
             {templates.map((t) => (
-              <div key={t.id} className="group bg-card border border-border/70 rounded-3xl p-6 hover:shadow-lg hover:shadow-primary/5 transition-all cursor-pointer">
+              <div
+                key={t.id}
+                onClick={() => setRunner(buildRunner(t.zone, t.title))}
+                className="group bg-card border border-border/70 rounded-3xl p-6 hover:shadow-lg hover:shadow-primary/5 transition-all cursor-pointer"
+              >
                 <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-white"
                   style={{ backgroundColor: `hsl(${t.color})` }}
