@@ -198,35 +198,144 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
   }
 
   if (finished) {
+    const issueItems = data.items.filter((i) => states[i.id].status === 'issue');
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
     return (
-      <div className="fixed inset-0 z-50 bg-background flex items-center justify-center p-6 animate-fade-in">
-        <div className="text-center max-w-sm">
-          <div className={`w-20 h-20 rounded-3xl mx-auto flex items-center justify-center mb-6 ${
-            score >= 90 ? 'bg-accent text-accent-foreground' : score >= 70 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
-          }`}>
-            <Icon name="CircleCheck" size={36} />
+      <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
+        {/* Шапка */}
+        <header className="border-b border-border/60 bg-background shrink-0 print:hidden">
+          <div className="max-w-2xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
+            <Button variant="ghost" size="icon" className="rounded-full -ml-2" onClick={onClose}>
+              <Icon name="ArrowLeft" size={20} />
+            </Button>
+            <p className="font-semibold text-sm">Отчёт сформирован</p>
+            <Button className="rounded-full gap-2 h-9 px-4" onClick={() => window.print()}>
+              <Icon name="Download" size={15} />
+              Сохранить PDF
+            </Button>
           </div>
-          <h2 className="font-display text-5xl font-medium tracking-tight">{score}%</h2>
-          <p className="text-muted-foreground mt-2 mb-1">«{data.title}» завершена</p>
-          <p className="text-sm text-muted-foreground mb-4">
-            {okCount} зачёт · {issues} незачёт
-          </p>
-          <div className="bg-secondary/60 rounded-2xl px-5 py-4 text-sm text-left space-y-2 mb-8">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Icon name="User" size={14} className="shrink-0" />
-              <span>{finalAssignee}</span>
+        </header>
+
+        {/* Отчёт */}
+        <div className="flex-1 overflow-y-auto">
+          <div id="print-report" className="max-w-2xl mx-auto px-5 sm:px-8 py-8 space-y-6">
+
+            {/* Логотип + заголовок */}
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <img
+                  src="https://cdn.poehali.dev/projects/da861bac-1ea4-49ae-b39c-72c9841ade32/bucket/0587e8cf-1680-4a82-baf6-adff85516944.png"
+                  alt="ICONFOOD"
+                  className="h-7 w-auto object-contain mb-3"
+                />
+                <h1 className="font-display text-3xl font-medium tracking-tight">{data.title}</h1>
+                <p className="text-muted-foreground text-sm mt-1">{restaurant} · {month} · {dateStr}</p>
+              </div>
+              <div className={`w-20 h-20 rounded-2xl shrink-0 flex flex-col items-center justify-center font-semibold tabular-nums ${
+                score >= 90 ? 'bg-accent text-accent-foreground' : score >= 70 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
+              }`}>
+                <span className="text-2xl leading-none">{score}%</span>
+                <span className="text-[11px] font-normal mt-0.5 opacity-70">итог</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Icon name="CalendarDays" size={14} className="shrink-0" />
-              <span>{month}</span>
+
+            {/* Мета-строка */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: 'User', label: 'Проверяющий', value: finalAssignee },
+                { icon: 'CheckCheck', label: 'Зачёт', value: `${okCount} из ${data.items.length}` },
+                { icon: 'X', label: 'Незачёт', value: String(issues) },
+              ].map((m) => (
+                <div key={m.label} className="bg-secondary/50 rounded-2xl p-4">
+                  <Icon name={m.icon} size={16} className="text-muted-foreground mb-2" />
+                  <p className="text-lg font-semibold tabular-nums">{m.value}</p>
+                  <p className="text-xs text-muted-foreground">{m.label}</p>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Icon name="MapPin" size={14} className="shrink-0" />
-              <span>{restaurant}</span>
+
+            {/* Все пункты */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Все пункты проверки</p>
+              <div className="border border-border/70 rounded-2xl overflow-hidden">
+                {data.items.map((item, idx) => {
+                  const st = states[item.id];
+                  return (
+                    <div
+                      key={item.id}
+                      className={`flex items-start gap-3 px-4 py-3 text-sm ${idx !== data.items.length - 1 ? 'border-b border-border/50' : ''} ${
+                        st.status === 'issue' ? 'bg-destructive/5' : ''
+                      }`}
+                    >
+                      <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5">{idx + 1}</span>
+                      <span className="flex-1 leading-snug">{item.text}</span>
+                      <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
+                        st.status === 'ok'
+                          ? 'bg-primary/10 text-primary'
+                          : st.status === 'issue'
+                          ? 'bg-destructive/15 text-destructive'
+                          : 'bg-secondary text-muted-foreground'
+                      }`}>
+                        {st.status === 'ok' ? 'Зачёт' : st.status === 'issue' ? 'Незачёт' : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Незачёты с комментариями и фото */}
+            {issueItems.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Незачёты · комментарии и фото</p>
+                <div className="space-y-3">
+                  {issueItems.map((item, idx) => {
+                    const st = states[item.id];
+                    return (
+                      <div key={item.id} className="border border-destructive/25 rounded-2xl p-4 space-y-3">
+                        <div className="flex items-start gap-2">
+                          <span className="w-5 h-5 rounded-full bg-destructive/15 text-destructive flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <p className="text-sm font-medium leading-snug">{item.text}</p>
+                        </div>
+                        {st.comment && (
+                          <p className="text-sm text-muted-foreground pl-7 italic">«{st.comment}»</p>
+                        )}
+                        {st.photo && (
+                          <div className="pl-7">
+                            <img src={st.photo} alt="фото нарушения" className="h-40 w-auto rounded-xl object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Подпись */}
+            <div className="border-t border-border/60 pt-6 flex items-center justify-between text-xs text-muted-foreground">
+              <span>Ресторанный холдинг ICONFOOD</span>
+              <span>{dateStr}</span>
             </div>
           </div>
-          <Button onClick={onClose} className="rounded-full px-8 h-11">Готово</Button>
         </div>
+
+        {/* Футер */}
+        <footer className="border-t border-border/60 bg-background shrink-0 print:hidden">
+          <div className="max-w-2xl mx-auto px-5 sm:px-8 py-4 flex gap-3">
+            <Button variant="outline" className="flex-1 rounded-full h-11" onClick={onClose}>
+              Закрыть
+            </Button>
+            <Button className="flex-1 rounded-full h-11 gap-2" onClick={() => window.print()}>
+              <Icon name="FileDown" size={16} />
+              Скачать PDF
+            </Button>
+          </div>
+        </footer>
       </div>
     );
   }

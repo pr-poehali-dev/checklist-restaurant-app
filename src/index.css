@@ -102,6 +102,26 @@
   }
 }
 
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-report,
+  #print-report * {
+    visibility: visible;
+  }
+  #print-report {
+    position: fixed;
+    inset: 0;
+    padding: 24px;
+    overflow: visible;
+  }
+  @page {
+    margin: 16mm;
+    size: A4;
+  }
+}
+
 @layer utilities {
   .font-display {
     font-family: "Cormorant", serif;
