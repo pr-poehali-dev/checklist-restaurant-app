@@ -73,11 +73,14 @@ const MONTHS = [
 ];
 
 const currentMonth = MONTHS[new Date().getMonth()];
+const currentYear = new Date().getFullYear();
+const YEARS = [currentYear - 1, currentYear, currentYear + 1];
 
 const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onClose: () => void; onComplete?: (c: CompletedCheck) => void }) => {
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [month, setMonth] = useState(currentMonth);
+  const [year, setYear] = useState(currentYear);
   const [restaurant, setRestaurant] = useState('');
   const [started, setStarted] = useState(false);
   const [states, setStates] = useState<Record<number, ItemState>>(
@@ -164,24 +167,44 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 </div>
               </div>
 
-              {/* Месяц */}
-              <div className="space-y-1.5">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Период</p>
-                <label className="text-sm font-medium">Месяц проверки</label>
-                <div className="grid grid-cols-3 gap-2 mt-2">
-                  {MONTHS.map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setMonth(m)}
-                      className={`h-10 rounded-xl text-sm font-medium transition-all ${
-                        month === m
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
-                      }`}
-                    >
-                      {m}
-                    </button>
-                  ))}
+              {/* Период */}
+              <div className="space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Период</p>
+                <div>
+                  <label className="text-sm font-medium">Год</label>
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {YEARS.map((y) => (
+                      <button
+                        key={y}
+                        onClick={() => setYear(y)}
+                        className={`h-10 rounded-xl text-sm font-medium transition-all ${
+                          year === y
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
+                        }`}
+                      >
+                        {y}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Месяц проверки</label>
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {MONTHS.map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setMonth(m)}
+                        className={`h-10 rounded-xl text-sm font-medium transition-all ${
+                          month === m
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -218,7 +241,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
             {canStart && (
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground px-1 animate-fade-in">
                 <span className="flex items-center gap-1.5"><Icon name="User" size={13} />{finalAssignee}</span>
-                <span className="flex items-center gap-1.5"><Icon name="CalendarDays" size={13} />{month}</span>
+                <span className="flex items-center gap-1.5"><Icon name="CalendarDays" size={13} />{month} {year}</span>
                 <span className="flex items-center gap-1.5"><Icon name="MapPin" size={13} />{restaurant}</span>
               </div>
             )}
@@ -270,7 +293,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                   className="h-7 w-auto object-contain mb-3"
                 />
                 <h1 className="font-display text-3xl font-medium tracking-tight">{data.title}</h1>
-                <p className="text-muted-foreground text-sm mt-1">{restaurant} · {month} · {dateStr}</p>
+                <p className="text-muted-foreground text-sm mt-1">{restaurant} · {month} {year} · {dateStr}</p>
               </div>
               <div className={`w-20 h-20 rounded-2xl shrink-0 flex flex-col items-center justify-center font-semibold tabular-nums ${
                 score >= 4 ? 'bg-accent text-accent-foreground' : score >= 3 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
@@ -440,7 +463,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
           </Button>
           <div className="flex-1 text-center min-w-0">
             <p className="font-semibold text-sm tracking-tight truncate">{data.title}</p>
-            <p className="text-[11px] text-muted-foreground truncate">{finalAssignee} · {month} · {restaurant}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{finalAssignee} · {month} {year} · {restaurant}</p>
           </div>
           <span className="text-sm font-medium tabular-nums text-muted-foreground w-12 text-right">
             {checked}/{data.items.length}
@@ -584,7 +607,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 score,
                 by: finalAssignee,
                 restaurant,
-                month,
+                month: `${month} ${year}`,
                 time: new Date().toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
                 issues,
                 fine: hasFines ? totalFine : undefined,
