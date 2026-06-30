@@ -99,7 +99,8 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
     : 5;
   const isStandards = data.zone === 'Стандарты';
   const isKitchen = data.zone === 'Кухня';
-  const hasFines = isStandards || isKitchen;
+  const isPastry = data.zone === 'Кондитер';
+  const hasFines = isStandards || isKitchen || isPastry;
   const totalFine = hasFines
     ? data.items
         .filter((i) => states[i.id].status === 'issue')
@@ -394,6 +395,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">Итоговый штраф</p>
                   {isStandards && <p className="text-xs text-muted-foreground">Касса: −1 000 ₽/пункт · Укомплектованность: −3 000 ₽ · Остальные: −500 ₽/пункт</p>}
                   {isKitchen && <p className="text-xs text-muted-foreground">Штраф зависит от пункта: 500 / 1 000 / 3 000 / 5 000 ₽</p>}
+                  {isPastry && <p className="text-xs text-muted-foreground">Штраф зависит от пункта: 500 или 1 000 ₽</p>}
                 </div>
                 <p className={`text-2xl font-bold tabular-nums ${totalFine > 0 ? 'text-destructive' : 'text-primary'}`}>
                   {totalFine > 0 ? `−${totalFine.toLocaleString('ru-RU')} ₽` : '0 ₽'}
