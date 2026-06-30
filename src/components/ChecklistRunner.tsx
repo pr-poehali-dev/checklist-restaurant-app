@@ -29,7 +29,19 @@ export interface CompletedCheck {
   issues: number;
 }
 
-type Status = 'pending' | 'ok' | 'issue';
+type Status = 'pending' | 'ok' | 'issue' | 'na';
+
+// Штраф за незачёт по секции (только для зоны Стандарты)
+const FINE_BY_SECTION: Record<string, number> = {
+  'Касса · 1000 баллов за каждый пункт': 1000,
+  'Укомплектованность штата · 3000 баллов': 3000,
+};
+const DEFAULT_FINE = 500;
+
+const getFine = (section: string | undefined): number => {
+  if (!section) return DEFAULT_FINE;
+  return FINE_BY_SECTION[section] ?? DEFAULT_FINE;
+};
 
 interface ItemState {
   status: Status;
@@ -84,6 +96,12 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const score = data.items.length
     ? Math.max(1, parseFloat((5 - (issues / data.items.length) * 4).toFixed(1)))
     : 5;
+  const isStandards = data.zone === 'Стандарты';
+  const totalFine = isStandards
+    ? data.items
+        .filter((i) => states[i.id].status === 'issue')
+        .reduce((sum, i) => sum + getFine(i.section), 0)
+    : 0;
 
   const onFile = (id: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -298,9 +316,11 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                           ? 'bg-primary/10 text-primary'
                           : st.status === 'issue'
                           ? 'bg-destructive/15 text-destructive'
+                          : st.status === 'na'
+                          ? 'bg-border/60 text-muted-foreground'
                           : 'bg-secondary text-muted-foreground'
                       }`}>
-                        {st.status === 'ok' ? 'Зачёт' : st.status === 'issue' ? 'Незачёт' : '—'}
+                        {st.status === 'ok' ? 'Зачёт' : st.status === 'issue' ? 'Незачёт' : st.status === 'na' ? 'Неакт.' : '—'}
                       </span>
                     </div>
                     </div>
@@ -364,6 +384,19 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
               );
             })()}
 
+            {/* Итоговый штраф для зоны Стандарты */}
+            {isStandards && (
+              <div className={`rounded-2xl p-5 flex items-center justify-between ${totalFine > 0 ? 'bg-destructive/8 border border-destructive/25' : 'bg-secondary/50 border border-border/60'}`}>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">Итоговый штраф</p>
+                  <p className="text-xs text-muted-foreground">Касса: −1 000 ₽/пункт · Укомплектованность: −3 000 ₽ · Остальные: −500 ₽/пункт</p>
+                </div>
+                <p className={`text-2xl font-bold tabular-nums ${totalFine > 0 ? 'text-destructive' : 'text-primary'}`}>
+                  {totalFine > 0 ? `−${totalFine.toLocaleString('ru-RU')} ₽` : '0 ₽'}
+                </p>
+              </div>
+            )}
+
             {/* Подпись */}
             <div className="border-t border-border/60 pt-6 flex items-center justify-between text-xs text-muted-foreground">
               <span>Ресторанный холдинг ICONFOOD</span>
@@ -426,15 +459,15 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 )}
               <div
                 className={`bg-card border rounded-3xl p-5 transition-all ${
-                  st.status === 'ok' ? 'border-primary/30' : st.status === 'issue' ? 'border-destructive/40' : 'border-border/70'
+                  st.status === 'ok' ? 'border-primary/30' : st.status === 'issue' ? 'border-destructive/40' : st.status === 'na' ? 'border-border/40 opacity-50' : 'border-border/70'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <span className="text-xs font-medium text-muted-foreground tabular-nums mt-1.5 w-5 shrink-0">{idx + 1}</span>
-                  <p className="flex-1 font-medium leading-snug">{item.text}</p>
+                  <p className={`flex-1 font-medium leading-snug ${st.status === 'na' ? 'line-through text-muted-foreground' : ''}`}>{item.text}</p>
                 </div>
 
-                <div className="flex gap-2 mt-4 pl-8">
+                <div className={`flex gap-2 mt-4 pl-8 ${isStandards ? 'flex-wrap' : ''}`}>
                   <button
                     onClick={() => set(item.id, { status: st.status === 'ok' ? 'pending' : 'ok' })}
                     className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all ${
@@ -451,6 +484,16 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                   >
                     <Icon name="X" size={16} /> Незачёт
                   </button>
+                  {isStandards && (
+                    <button
+                      onClick={() => set(item.id, { status: st.status === 'na' ? 'pending' : 'na', comment: '', photo: undefined })}
+                      className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all min-w-[110px] ${
+                        st.status === 'na' ? 'bg-muted-foreground/20 text-muted-foreground ring-1 ring-border' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
+                      }`}
+                    >
+                      <Icon name="Minus" size={16} /> Неактуально
+                    </button>
+                  )}
                 </div>
 
                 {st.status === 'issue' && (
@@ -500,12 +543,17 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
       {/* Footer */}
       <footer className="border-t border-border/60 bg-background/80 backdrop-blur-xl shrink-0">
         <div className="max-w-2xl mx-auto px-5 sm:px-8 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-3 text-sm flex-wrap">
             <span className="flex items-center gap-1.5 text-primary font-medium"><Icon name="Check" size={15} />{okCount} зачёт</span>
             <span className="flex items-center gap-1.5 text-destructive font-medium"><Icon name="X" size={15} />{issues} незачёт</span>
             {checked > 0 && (
               <span className="flex items-center gap-1 font-semibold tabular-nums text-foreground border border-border/70 rounded-full px-2.5 py-0.5">
                 {score} <span className="text-muted-foreground font-normal text-xs">/ 5</span>
+              </span>
+            )}
+            {isStandards && totalFine > 0 && (
+              <span className="flex items-center gap-1.5 font-semibold text-destructive tabular-nums border border-destructive/30 rounded-full px-2.5 py-0.5">
+                <Icon name="CircleMinus" size={14} />−{totalFine.toLocaleString('ru-RU')} ₽
               </span>
             )}
           </div>
