@@ -426,10 +426,15 @@ const Index = () => {
                     <span className="text-[10px] font-normal opacity-60">из 5</span>
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <Badge variant="secondary" className="rounded-full font-normal">{c.zone}</Badge>
                       {'issues' in c && c.issues > 0 && (
                         <span className="text-xs text-destructive font-medium">{c.issues} незачёт</span>
+                      )}
+                      {'fine' in c && c.fine != null && c.fine > 0 && (
+                        <span className="text-xs font-semibold text-destructive bg-destructive/10 rounded-full px-2 py-0.5">
+                          −{c.fine.toLocaleString('ru-RU')} ₽
+                        </span>
                       )}
                     </div>
                     <h3 className="font-semibold tracking-tight">{c.title}</h3>

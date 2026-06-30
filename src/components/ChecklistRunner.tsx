@@ -28,6 +28,7 @@ export interface CompletedCheck {
   month: string;
   time: string;
   issues: number;
+  fine?: number;
 }
 
 type Status = 'pending' | 'ok' | 'issue' | 'na';
@@ -586,6 +587,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 month,
                 time: new Date().toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
                 issues,
+                fine: hasFines ? totalFine : undefined,
               });
             }}
             className="rounded-full px-8 h-11 gap-2"
